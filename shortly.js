@@ -51,8 +51,14 @@ function(req, res) {
 
 app.get('/links', restrict,
 function(req, res) {
+  var userID;
+  util.getUserId(req.session.user, function(id) {
+    userID = id;
+  });
   Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
+    res.status(200).send(links.models.filter(function(website) {
+      return website.attributes.user_id === userID;
+    }));
   });
 });
 
