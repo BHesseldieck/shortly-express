@@ -40,6 +40,16 @@ function(req, res) {
   });
 });
 
+app.get('/signup', 
+function(req, res) {
+  res.render('signup');
+});
+
+app.get('/login', 
+function(req, res) {
+  res.render('login');
+});
+
 app.post('/links', 
 function(req, res) {
   var uri = req.body.url;
@@ -50,6 +60,7 @@ function(req, res) {
   }
 
   new Link({ url: uri }).fetch().then(function(found) {
+    console.log(found);
     if (found) {
       res.status(200).send(found.attributes);
     } else {
@@ -72,6 +83,43 @@ function(req, res) {
   });
 });
 
+
+app.post('/signup', 
+function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+/************************************************************/
+// Add utility functions to check for valid username and password
+/************************************************************/
+
+  // if (!util.isValidUrl(uri)) {
+  //   console.log('Not a valid url: ', uri);
+  //   return res.sendStatus(404);
+  // }
+
+  new User({ username: username, password: password }).fetch().then(function(found) {
+    console.log(found);
+    if (found) {
+      res.status(409).send('Username already taken');
+    } else {
+      util.getUrlTitle(uri, function(err, title) {
+        if (err) {
+          console.log('Error reading URL heading: ', err);
+          return res.sendStatus(404);
+        }
+
+        Users.create({
+          url: uri,
+          title: title,
+          baseUrl: req.headers.origin
+        })
+        .then(function(newLink) {
+          res.status(200).send(newLink);
+        });
+      });
+    }
+  });
+});
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/

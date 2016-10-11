@@ -11,6 +11,7 @@ var User = db.Model.extend({
   links: function() {
     return this.hasMany(Link);
   },
+  // Listen on create
   initialize: function() {
     this.on('createUser', function(model, attrs, options) {
       var shasum = bcrypt.hash('sha1');
@@ -18,7 +19,7 @@ var User = db.Model.extend({
       model.set('code', shasum.digest('hex').slice(0, 5));
     });
   }
-  // change password function
+  // Listen on update (change password or username)
 });
 
 module.exports = User;

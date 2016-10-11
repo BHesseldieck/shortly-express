@@ -22,6 +22,7 @@ var Link = db.Model.extend({
       model.set('code', shasum.digest('hex').slice(0, 5));
     });
   }
+  // Listen on Delete
 });
 
 module.exports = Link;
