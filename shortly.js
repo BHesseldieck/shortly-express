@@ -129,7 +129,7 @@ function(req, res) {
       // need to add a session when found
       req.session.regenerate(function() {
         req.session.user = username;
-        res.render('index');
+        res.redirect('/');
       });
     } else {
       res.writeHead(404, {location: '/login'});
@@ -161,8 +161,11 @@ function(req, res) {
         password: password,
       })
       .then(function(newLink) {
-        res.writeHead(200, {location: '/'});
-        res.end();
+        req.session.regenerate(function() {
+          req.session.user = username;
+          // res.render('index');
+          res.redirect('/');
+        });
       });
     }
   });
