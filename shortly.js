@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var Session = require('express-session');
 
 
 var db = require('./app/config');
@@ -21,19 +22,34 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(Session({
+  secret: 'Secret',
+  resave: false,
+  saveUninitialized: true
+}));
 
 
-app.get('/', 
+var restrict = function (req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    req.session.error = 'Access denied!';
+    res.redirect('/login');
+  }
+};
+
+app.get('/', restrict, 
+function(req, res) {
+  console.log(req.session);
+  res.render('index');
+});
+
+app.get('/create', restrict,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
-function(req, res) {
-  res.render('index');
-});
-
-app.get('/links', 
+app.get('/links', restrict,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
@@ -96,11 +112,12 @@ function(req, res) {
 
   new User({ username: username, password: password }).fetch().then(function(found) {
     if (found) {
+      // need to add a session when found
       res.writeHead(200, {location: '/'});
       res.end();
     } else {
       res.writeHead(404, {location: '/login'});
-      res.end('The username and / or password are incorrect');
+      res.end();
     }
   });
 });
