@@ -13,10 +13,13 @@ var User = db.Model.extend({
   },
   // Listen on create
   initialize: function() {
-    this.on('createUser', function(model, attrs, options) {
-      var shasum = bcrypt.hash('sha1');
-      shasum.update(model.get('url'));
-      model.set('code', shasum.digest('hex').slice(0, 5));
+    this.on('create', function(model, attrs, options) {
+      bcrypt.hash(attrs.password, null, null, function(err, hash) {
+        // Store hash in your password DB.
+        console.log('encrypt is running');
+      });
+      // shasum.update(model.get('url'));
+      // model.set('code', shasum.digest('hex').slice(0, 5));
     });
   }
   // Listen on update (change password or username)

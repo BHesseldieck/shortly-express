@@ -60,7 +60,6 @@ function(req, res) {
   }
 
   new Link({ url: uri }).fetch().then(function(found) {
-    console.log(found);
     if (found) {
       res.status(200).send(found.attributes);
     } else {
@@ -69,7 +68,6 @@ function(req, res) {
           console.log('Error reading URL heading: ', err);
           return res.sendStatus(404);
         }
-
         Links.create({
           url: uri,
           title: title,
@@ -79,6 +77,30 @@ function(req, res) {
           res.status(200).send(newLink);
         });
       });
+    }
+  });
+});
+
+app.post('/login', 
+function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+/************************************************************/
+// Add utility functions to check for valid username and password
+/************************************************************/
+
+  // if (!util.isValidUrl(uri)) {
+  //   console.log('Not a valid url: ', uri);
+  //   return res.sendStatus(404);
+  // }
+
+  new User({ username: username, password: password }).fetch().then(function(found) {
+    if (found) {
+      res.writeHead(200, {location: '/'});
+      res.end();
+    } else {
+      res.writeHead(404, {location: '/login'});
+      res.end('The username and / or password are incorrect');
     }
   });
 });
@@ -97,25 +119,17 @@ function(req, res) {
   //   return res.sendStatus(404);
   // }
 
-  new User({ username: username, password: password }).fetch().then(function(found) {
-    console.log(found);
+  new User({ username: username }).fetch().then(function(found) {
     if (found) {
       res.status(409).send('Username already taken');
     } else {
-      util.getUrlTitle(uri, function(err, title) {
-        if (err) {
-          console.log('Error reading URL heading: ', err);
-          return res.sendStatus(404);
-        }
-
-        Users.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
-        });
+      Users.create({
+        username: username,
+        password: password,
+      })
+      .then(function(newLink) {
+        res.writeHead(200, {location: '/'});
+        res.end();
       });
     }
   });
