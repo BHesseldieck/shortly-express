@@ -41,7 +41,6 @@ var restrict = function (req, res, next) {
 
 app.get('/', restrict, 
 function(req, res) {
-  console.log(req.session);
   res.render('index');
 });
 
@@ -80,6 +79,10 @@ function(req, res) {
     console.log('Not a valid url: ', uri);
     return res.sendStatus(404);
   }
+  var userID;
+  util.getUserId(req.session.user, function(id) {
+    userID = id;
+  });
 
   new Link({ url: uri }).fetch().then(function(found) {
     if (found) {
@@ -93,7 +96,8 @@ function(req, res) {
         Links.create({
           url: uri,
           title: title,
-          baseUrl: req.headers.origin
+          baseUrl: req.headers.origin,
+          'user_id': userID
         })
         .then(function(newLink) {
           res.status(200).send(newLink);
@@ -115,19 +119,6 @@ function(req, res) {
   //   console.log('Not a valid url: ', uri);
   //   return res.sendStatus(404);
   // }
-  console.log('req.session', req.session);
-
-  // new User({ username: username, password: password }).fetch().then(function(found) {
-    // if (found) {
-    //   // need to add a session when found
-    //   req.session.regenerate(function() {
-    //     req.session.user = username;
-    //     res.writeHead(200, {location: '/links'});
-    //     res.end();
-    //   });
-    // } else {
-    //   res.redirect('login');
-    // }
 
   new User({ username: username, password: password }).fetch().then(function(found) {
     if (found) {
