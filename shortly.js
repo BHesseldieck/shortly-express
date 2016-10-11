@@ -25,7 +25,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(Session({
   secret: 'Secret',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: { maxAge: 60000 }
 }));
 
 
@@ -109,12 +110,27 @@ function(req, res) {
   //   console.log('Not a valid url: ', uri);
   //   return res.sendStatus(404);
   // }
+  console.log('req.session', req.session);
+
+  // new User({ username: username, password: password }).fetch().then(function(found) {
+    // if (found) {
+    //   // need to add a session when found
+    //   req.session.regenerate(function() {
+    //     req.session.user = username;
+    //     res.writeHead(200, {location: '/links'});
+    //     res.end();
+    //   });
+    // } else {
+    //   res.redirect('login');
+    // }
 
   new User({ username: username, password: password }).fetch().then(function(found) {
     if (found) {
       // need to add a session when found
-      res.writeHead(200, {location: '/'});
-      res.end();
+      req.session.regenerate(function() {
+        req.session.user = username;
+        res.render('index');
+      });
     } else {
       res.writeHead(404, {location: '/login'});
       res.end();
