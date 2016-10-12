@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(Session({
-  secret: 'Secret',
+  secret: 'hackreactor48',
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 60000 }
@@ -134,8 +134,8 @@ function(req, res) {
         res.redirect('/');
       });
     } else {
-      res.writeHead(404, {location: '/login'});
-      res.end();
+      res.status(404);
+      res.redirect('/login');
     }
   });
 });
@@ -153,23 +153,35 @@ function(req, res) {
   //   console.log('Not a valid url: ', uri);
   //   return res.sendStatus(404);
   // }
-
+  var newSalt;
   new User({ username: username }).fetch().then(function(found) {
     if (found) {
-      res.status(409).send('Username already taken');
-    } else {
-      Users.create({
-        username: username,
-        password: password,
-      })
-      .then(function(newLink) {
-        req.session.regenerate(function() {
-          req.session.user = username;
-          // res.render('index');
-          res.redirect('/');
-        });
-      });
+      throw new Error('Username already exists');
     }
+  })
+  .then(() => {
+    return util.createSalt(10);
+  })
+  .then((salt) => {
+    newSalt = salt;
+    return util.encrypt(password, salt);
+  })
+  .then((hash) => {
+    return Users.create({
+      username: username,
+      password: hash,
+      salt: newSalt
+    });
+  })
+  .then(function() {
+    req.session.regenerate(function() {
+      req.session.user = username;
+      res.redirect('/');
+    });
+  })
+  .catch((err) => {
+    res.status(409);
+    res.redirect('/signup');
   });
 });
 /************************************************************/
