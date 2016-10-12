@@ -117,17 +117,24 @@ app.post('/login',
 function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-/************************************************************/
-// Add utility functions to check for valid username and password
-/************************************************************/
 
-  // if (!util.isValidUrl(uri)) {
-  //   console.log('Not a valid url: ', uri);
-  //   return res.sendStatus(404);
-  // }
-
-  new User({ username: username, password: password }).fetch().then(function(found) {
-    if (found) {
+  //Find the salt used for the user
+  var hashedPasswordDB;
+  new User({username: username}).fetch().then(function(found) {
+    hashedPasswordDB = found.attributes.password;
+    return found.attributes.salt;
+  })
+  .then(function(salt) {
+    //Hash the provided password with the salt retrieved
+    return util.encrypt(password, salt);
+  })
+  .then(function(hashInsertedPW) {
+    //Verify that this result is the same as what the password is in the database
+    return hashInsertedPW === hashedPasswordDB;
+  })
+  .then(function(isRightPassword) {
+    //Follow existing routes for failure and success
+    if (isRightPassword) {
       // need to add a session when found
       req.session.regenerate(function() {
         req.session.user = username;
@@ -145,14 +152,7 @@ app.post('/signup',
 function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-/************************************************************/
-// Add utility functions to check for valid username and password
-/************************************************************/
 
-  // if (!util.isValidUrl(uri)) {
-  //   console.log('Not a valid url: ', uri);
-  //   return res.sendStatus(404);
-  // }
   var newSalt;
   new User({ username: username }).fetch().then(function(found) {
     if (found) {
@@ -184,11 +184,6 @@ function(req, res) {
     res.redirect('/signup');
   });
 });
-/************************************************************/
-// Write your authentication routes here
-/************************************************************/
-
-
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
